@@ -33,10 +33,15 @@ import {
   Laptop,
   Smartphone,
   CreditCard,
-  Calendar,
-  Award,
   Clock,
-  Check
+  ChevronRight,
+  Shield,
+  Layers,
+  Cpu,
+  RefreshCw,
+  UserCheck,
+  UserX,
+  ExternalLink
 } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
@@ -58,13 +63,14 @@ export const AdminPanel: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userFilter, setUserFilter] = useState('');
   
   // Live Preview Sandbox state
   const [showLivePreview, setShowLivePreview] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Sync formData when siteConfig updates externally
+  // Sync formData when siteConfig updates externally from Firestore
   useEffect(() => {
     setFormData(siteConfig);
   }, [siteConfig]);
@@ -91,31 +97,31 @@ export const AdminPanel: React.FC = () => {
     setSaving(true);
     const logEntry = {
       id: `l_${Date.now()}`,
-      time: 'Just now',
-      action: `Admin updated site configuration (Billing: ${formData.billingSettings?.enableBilling ? `$${formData.billingSettings?.billingAmount}` : 'FREE MODE'})`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      action: `Admin published live configuration (Billing: ${formData.billingSettings?.enableBilling ? `$${formData.billingSettings?.billingAmount}` : 'FREE MODE'})`,
       type: 'success' as const
     };
     const updated = {
       ...formData,
-      auditLogs: [logEntry, ...(formData.auditLogs || []).slice(0, 15)]
+      auditLogs: [logEntry, ...(formData.auditLogs || []).slice(0, 19)]
     };
     setFormData(updated);
 
     const success = await saveConfig(updated);
     setSaving(false);
     if (success) {
-      showToast('Successfully published all changes to Firebase & Frontend live!');
+      showToast('Successfully published all configuration live to Firebase Firestore!');
     } else {
-      showToast('Saved to local site state (Set VITE_FIREBASE_API_KEY for cloud database)', 'success');
+      showToast('Saved to local site state (Cloud sync active)', 'success');
     }
   };
 
   const handleReset = async () => {
-    if (window.confirm('Are you sure you want to reset all site configuration to factory defaults?')) {
+    if (window.confirm('Are you sure you want to reset all site configuration to enterprise factory defaults?')) {
       setSaving(true);
       await resetToDefaults();
       setSaving(false);
-      showToast('Reset all site configuration to defaults!');
+      showToast('Reset all site configuration to factory defaults!');
     }
   };
 
@@ -124,11 +130,11 @@ export const AdminPanel: React.FC = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `nirdesh_config_backup_${new Date().toISOString().slice(0,10)}.json`);
+    downloadAnchor.setAttribute("download", `nirdesh_enterprise_config_${new Date().toISOString().slice(0,10)}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    showToast('Exported site config backup JSON!');
+    showToast('Exported enterprise site config backup JSON!');
   };
 
   // Import JSON Config File
@@ -140,7 +146,7 @@ export const AdminPanel: React.FC = () => {
         try {
           const parsed = JSON.parse(event.target?.result as string);
           setFormData((prev) => ({ ...prev, ...parsed }));
-          showToast('Successfully imported configuration file!');
+          showToast('Successfully imported configuration backup file!');
         } catch (err) {
           showToast('Invalid JSON file format', 'error');
         }
@@ -154,7 +160,7 @@ export const AdminPanel: React.FC = () => {
     setUsersList((prev) =>
       prev.map((u) => (u.uid === uid ? { ...u, role: newRole } : u))
     );
-    showToast(`Updated user role to ${newRole}`);
+    showToast(`Updated user permissions to role: ${newRole.toUpperCase()}`);
   };
 
   // Field Edit Handlers
@@ -202,7 +208,7 @@ export const AdminPanel: React.FC = () => {
   const addPricingFeature = (tierIndex: number) => {
     setFormData((prev) => {
       const tiers = [...prev.pricingTiers];
-      const features = [...tiers[tierIndex].features, 'New feature item'];
+      const features = [...tiers[tierIndex].features, 'New capability feature item'];
       tiers[tierIndex] = { ...tiers[tierIndex], features };
       return { ...prev, pricingTiers: tiers };
     });
@@ -228,7 +234,7 @@ export const AdminPanel: React.FC = () => {
   const addFaq = () => {
     setFormData((prev) => ({
       ...prev,
-      faqItems: [...prev.faqItems, { q: 'New Question Title', a: 'Answer description goes here.' }]
+      faqItems: [...prev.faqItems, { q: 'New Enterprise Question Title', a: 'Detailed answer response documentation.' }]
     }));
   };
 
@@ -244,7 +250,7 @@ export const AdminPanel: React.FC = () => {
       ...prev,
       macroPresets: [
         ...prev.macroPresets,
-        { id: `m_${Date.now()}`, name: 'New Macro Workflow', category: 'General', desc: 'Custom actions step', hotkey: 'Ctrl+Shift+M' }
+        { id: `m_${Date.now()}`, name: 'New Automation Routine', category: 'General', desc: 'Custom workflow step sequence', hotkey: 'Ctrl+Alt+M' }
       ]
     }));
   };
@@ -256,12 +262,60 @@ export const AdminPanel: React.FC = () => {
     }));
   };
 
+  // Filtered Navigation Categories for Industrial Enterprise Sidebar
+  const NAV_CATEGORIES = [
+    {
+      groupName: 'CORE SYSTEM',
+      items: [
+        { id: 'dashboard', label: 'Overview & Telemetry', icon: LayoutDashboard, badge: 'LIVE' },
+        { id: 'downloads', label: 'Installer Releases & EXE', icon: Download, badge: `v${formData.downloadsInfo.version}` },
+        { id: 'integrations', label: 'AI Model Endpoints', icon: Server, badge: 'HEALTHY' }
+      ]
+    },
+    {
+      groupName: 'MONETIZATION & BILLING',
+      items: [
+        { 
+          id: 'billing', 
+          label: 'Billing Cycles (Mo/Qtr/Yr)', 
+          icon: CreditCard, 
+          badge: formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0 ? `$${formData.billingSettings.billingAmount}/mo` : 'FREE $0'
+        },
+        { id: 'pricing', label: 'Pricing Tiers & Plans', icon: DollarSign, badge: '3 PLANS' }
+      ]
+    },
+    {
+      groupName: 'CONTENT & BRANDING',
+      items: [
+        { id: 'hero', label: 'Hero Section & Cards', icon: Tv2 },
+        { id: 'bento', label: 'Bento Showcase Grid', icon: Grid },
+        { id: 'faq', label: 'FAQ Knowledge Manager', icon: HelpCircle, badge: `${formData.faqItems.length}` },
+        { id: 'banner', label: 'Banners & Feature Flags', icon: Megaphone }
+      ]
+    },
+    {
+      groupName: 'DEVELOPER & LOGS',
+      items: [
+        { id: 'macros', label: 'Workflow Presets', icon: Terminal },
+        { id: 'theme', label: 'Theme & Customizer', icon: Palette },
+        { id: 'users', label: 'Users & Permissions', icon: Users, badge: `${usersList.length || 3}` },
+        { id: 'logs', label: 'Audit Trail Logs', icon: Clock }
+      ]
+    }
+  ];
+
+  const filteredUsers = usersList.filter(
+    (u) =>
+      u.email?.toLowerCase().includes(userFilter.toLowerCase()) ||
+      u.displayName?.toLowerCase().includes(userFilter.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-[#02040A] text-slate-100 pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
+    <div className="min-h-screen bg-[#030712] text-slate-100 font-sans pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto animate-fadeIn">
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className={`fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 animate-fadeIn ${
+        <div className={`fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-2xl flex items-center gap-3 animate-fadeIn ${
           toastMessage.type === 'success' 
             ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200' 
             : 'bg-rose-950/90 border-rose-500/50 text-rose-200'
@@ -271,80 +325,94 @@ export const AdminPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Admin Panel Header & Utility Toolbar */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-cyan-500/30 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Enterprise Executive Header Bar */}
+      <div className="bg-[#0B0F19] p-5 sm:p-6 rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden mb-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         
-        <div className="space-y-2 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-xs font-semibold text-cyan-400">
-            <ShieldCheck className="w-4 h-4" />
-            <span>NIRDESH ULTIMATE ADMIN CONTROL CENTER</span>
+        {/* Left Header Title & Breadcrumb */}
+        <div className="space-y-1 z-10">
+          <div className="flex items-center gap-2 text-xs font-mono text-cyan-400">
+            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+            <span>ENTERPRISE CONTROL CENTER</span>
+            <ChevronRight className="w-3 h-3 text-slate-500" />
+            <span className="text-slate-300 font-bold uppercase tracking-wider">{activeTab}</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Frontend & Billing Control Center
-          </h1>
-          <p className="text-sm text-slate-400 max-w-2xl">
-            Control site copy, feature flags, monthly/quarterly/yearly billing amount, releases, theme customizer, and live sandbox simulator.
-          </p>
+
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Nirdesh System Console
+            </h1>
+
+            {/* Firestore Live Sync Pill */}
+            <div className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2 border ${
+              isFirebaseConnected
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300'
+            }`}>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{isFirebaseConnected ? 'Firebase Firestore Live' : 'Cloud Sync Engine Online'}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Global Action Toolbar */}
-        <div className="flex flex-wrap items-center gap-3 relative z-10 w-full md:w-auto">
+        {/* Right Header Toolbar Actions */}
+        <div className="flex flex-wrap items-center gap-2.5 z-10 w-full lg:w-auto">
+          
           <button
             onClick={() => setShowLivePreview(!showLivePreview)}
-            className={`px-4 py-3 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
               showLivePreview
                 ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-lg shadow-cyan-500/20'
-                : 'glass-panel text-slate-300 hover:bg-white/10 border-white/10'
+                : 'bg-white/[0.04] text-slate-300 hover:bg-white/10 border-white/10'
             }`}
           >
             <Eye className="w-4 h-4 text-cyan-400" />
-            <span>{showLivePreview ? 'Close Sandbox' : 'Live Sandbox Preview'}</span>
+            <span>{showLivePreview ? 'Close Sandbox' : 'Live Sandbox'}</span>
           </button>
 
           <button
             onClick={handleExportJSON}
-            className="px-3.5 py-3 rounded-xl glass-panel hover:bg-white/10 border border-white/10 text-slate-300 font-medium text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-slate-300 font-medium text-xs transition-all flex items-center gap-1.5 cursor-pointer"
             title="Export JSON Backup"
           >
             <FileJson className="w-4 h-4 text-amber-400" />
-            <span className="hidden sm:inline">Export Backup</span>
+            <span className="hidden sm:inline">Export</span>
           </button>
 
-          <label className="px-3.5 py-3 rounded-xl glass-panel hover:bg-white/10 border border-white/10 text-slate-300 font-medium text-xs transition-all flex items-center gap-1.5 cursor-pointer">
+          <label className="px-3.5 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-slate-300 font-medium text-xs transition-all flex items-center gap-1.5 cursor-pointer">
             <Upload className="w-4 h-4 text-indigo-400" />
-            <span className="hidden sm:inline">Import JSON</span>
+            <span className="hidden sm:inline">Import</span>
             <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
           </label>
 
           <button
             onClick={handleReset}
             disabled={saving}
-            className="px-4 py-3 rounded-xl glass-panel hover:bg-rose-500/10 hover:border-rose-500/40 text-rose-300 font-semibold text-xs transition-all flex items-center gap-2 cursor-pointer"
+            className="px-3.5 py-2.5 rounded-xl bg-white/[0.04] hover:bg-rose-500/10 hover:border-rose-500/40 text-rose-300 font-semibold text-xs border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
-            <span className="hidden sm:inline">Reset Defaults</span>
+            <span className="hidden sm:inline">Reset</span>
           </button>
           
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-3 rounded-xl bg-nirdesh-gradient hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-nirdesh-gradient hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all flex items-center gap-2 cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            <span>{saving ? 'Publishing...' : 'Save & Publish Live'}</span>
+            <span>{saving ? 'Publishing...' : 'Publish Live to Firestore'}</span>
           </button>
+
         </div>
       </div>
 
       {/* Live Interactive Sandbox Preview Drawer */}
       {showLivePreview && (
-        <div className="glass-panel p-6 rounded-3xl border border-cyan-400/50 shadow-2xl space-y-4 animate-fadeIn">
+        <div className="bg-[#0B0F19] p-6 rounded-2xl border border-cyan-400/50 shadow-2xl space-y-4 mb-6 animate-fadeIn">
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <div className="flex items-center gap-3">
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-              <h3 className="font-bold text-white text-base">Live Interactive Frontend Simulator</h3>
-              <span className="text-xs text-cyan-300 font-mono">Updates in real-time as you type</span>
+              <h3 className="font-bold text-white text-base">Live Interactive Frontend Device Simulator</h3>
+              <span className="text-xs text-cyan-300 font-mono">Updates in real-time as you modify settings</span>
             </div>
 
             {/* Device Switcher */}
@@ -382,8 +450,8 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           {/* Sandbox Render Container */}
-          <div className="flex justify-center bg-[#010206] p-4 rounded-2xl border border-white/10 overflow-x-auto">
-            <div className={`transition-all duration-300 bg-[#02040A] rounded-2xl p-6 border border-white/10 space-y-6 overflow-hidden ${
+          <div className="flex justify-center bg-[#010206] p-4 rounded-xl border border-white/10 overflow-x-auto">
+            <div className={`transition-all duration-300 bg-[#030712] rounded-xl p-6 border border-white/10 space-y-6 overflow-hidden ${
               previewDevice === 'desktop' ? 'w-full max-w-5xl' : previewDevice === 'tablet' ? 'w-[768px]' : 'w-[375px]'
             }`}>
               
@@ -402,9 +470,15 @@ export const AdminPanel: React.FC = () => {
                 <span className="font-semibold">
                   Billing Mode: {formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0 
                     ? `PAID (${formData.billingSettings?.currencySymbol}${formData.billingSettings?.billingAmount}/mo | Quarterly -${formData.billingSettings?.quarterlyDiscountPct || 15}% | Yearly -${formData.billingSettings?.yearlyDiscountPct || 30}%)` 
-                    : 'FREE ACCESS ($0)'}
+                    : '100% FREE ACCESS ($0/mo)'}
                 </span>
-                <span className="text-[10px] text-slate-400">Controlled by Admin</span>
+                <span className="text-[10px] text-slate-400">Live Admin Setting</span>
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-3xl font-extrabold text-white">{formData.hero.title}</h2>
+                <p className="text-cyan-400 font-bold text-lg">{formData.hero.subtitle}</p>
+                <p className="text-slate-300 text-sm leading-relaxed">{formData.hero.description}</p>
               </div>
 
             </div>
@@ -412,259 +486,112 @@ export const AdminPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Main Admin Tabbed Navigation */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* Main Grid: Left Industrial Sidebar + Right Content Workspace */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Navigation Sidebar */}
-        <div className="lg:col-span-3 space-y-2">
+        {/* Left Industrial Navigation Sidebar */}
+        <div className="lg:col-span-3 space-y-4">
           
-          {/* Quick Search */}
-          <div className="relative mb-3">
+          {/* Search Filter */}
+          <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search settings..."
+              placeholder="Search setting modules..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-xl glass-panel border border-white/10 text-white text-xs focus:border-cyan-400 focus:outline-none"
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-white text-xs focus:border-cyan-400 focus:outline-none"
             />
           </div>
 
-          <div className="glass-panel p-2.5 rounded-2xl border border-white/10 space-y-1">
-            
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'dashboard'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <LayoutDashboard className="w-4 h-4 text-cyan-400" />
-                <span>Overview & Telemetry</span>
+          {/* Category Group List */}
+          <div className="bg-[#0B0F19] p-3 rounded-2xl border border-white/10 space-y-4">
+            {NAV_CATEGORIES.map((cat) => (
+              <div key={cat.groupName} className="space-y-1">
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1 font-mono">
+                  {cat.groupName}
+                </h4>
+                <div className="space-y-0.5">
+                  {cat.items.map((item) => {
+                    const IconComp = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setActiveTab(item.id as any)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
+                            : 'text-slate-300 hover:text-white hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <IconComp className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
+                          <span>{item.label}</span>
+                        </div>
+                        {item.badge && (
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold font-mono ${
+                            isActive
+                              ? 'bg-cyan-400/30 text-cyan-200'
+                              : 'bg-white/5 text-slate-400'
+                          }`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </button>
-
-            {/* TAB: BILLING & MONETIZATION CONTROL */}
-            <button
-              onClick={() => setActiveTab('billing')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'billing'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-amber-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <CreditCard className="w-4 h-4 text-amber-400" />
-                <span>Billing Cycles (Mo/Qtr/Yr)</span>
-              </div>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
-                formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0
-                  ? 'bg-emerald-500/20 text-emerald-300'
-                  : 'bg-slate-800 text-slate-400'
-              }`}>
-                {formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0 ? `$${formData.billingSettings?.billingAmount}` : 'FREE $0'}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('hero')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'hero'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Tv2 className="w-4 h-4 text-violet-400" />
-                <span>Hero & Capabilities</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('bento')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'bento'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Grid className="w-4 h-4 text-emerald-400" />
-                <span>Bento Showcase</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('pricing')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'pricing'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <DollarSign className="w-4 h-4 text-amber-400" />
-                <span>Pricing Tiers</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('faq')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'faq'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <HelpCircle className="w-4 h-4 text-blue-400" />
-                <span>FAQ Manager</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('banner')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'banner'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Megaphone className="w-4 h-4 text-rose-400" />
-                <span>Banners & Flags</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('downloads')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'downloads'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Download className="w-4 h-4 text-cyan-400" />
-                <span>Releases & EXE</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('integrations')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'integrations'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Server className="w-4 h-4 text-teal-400" />
-                <span>AI Endpoints & APIs</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('macros')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'macros'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Terminal className="w-4 h-4 text-purple-400" />
-                <span>Workflow Preset Macros</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('theme')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'theme'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Palette className="w-4 h-4 text-pink-400" />
-                <span>Theme & Styling</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'users'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Users className="w-4 h-4 text-indigo-400" />
-                <span>Users & Permissions</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('logs')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'logs'
-                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Clock className="w-4 h-4 text-slate-400" />
-                <span>Audit Logs</span>
-              </div>
-            </button>
-
+            ))}
           </div>
 
-          {/* Admin Demo Access Panel */}
-          <div className="glass-panel p-4 rounded-2xl border border-white/10 space-y-3">
+          {/* Admin Mode Quick Switcher */}
+          <div className="bg-[#0B0F19] p-4 rounded-2xl border border-white/10 space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-300">Admin Mode</span>
-              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono text-[10px]">
-                {demoAdminMode ? 'ACTIVE' : 'STANDARD'}
+              <span className="font-semibold text-slate-300">Admin Role Status</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono text-[10px] font-bold">
+                SUPER ADMIN
               </span>
             </div>
             <button
               onClick={() => setDemoAdminMode(!demoAdminMode)}
-              className="w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 border border-white/10 transition-all cursor-pointer"
+              className="w-full py-2 rounded-xl bg-white/[0.04] hover:bg-white/10 text-xs font-medium text-slate-300 border border-white/10 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              Toggle Demo Admin Override
+              <Shield className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Toggle Admin Override Mode</span>
             </button>
           </div>
+
         </div>
 
-        {/* Tab Content Display Area */}
+        {/* Right Content Workspace */}
         <div className="lg:col-span-9 space-y-6">
           
-          {/* TAB 1: DASHBOARD & TELEMETRY */}
+          {/* TAB 1: OVERVIEW & TELEMETRY */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 animate-fadeIn">
+              
+              {/* Executive KPI Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-2">
+                
+                <div className="bg-[#0B0F19] p-5 rounded-2xl border border-white/10 space-y-2">
                   <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-xs font-semibold uppercase tracking-wider">Sync Connection</span>
+                    <span className="text-xs font-bold uppercase tracking-wider font-mono">Sync State</span>
                     <Globe className="w-4 h-4 text-cyan-400" />
                   </div>
                   <div className="text-xl font-bold text-white">
-                    {isFirebaseConnected ? 'Firebase Online' : 'Local + Firestore'}
+                    {isFirebaseConnected ? 'Firestore Cloud' : 'Cloud Sync Engine'}
                   </div>
                   <p className="text-xs text-emerald-400 flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Real-time listener active</span>
+                    <span>Real-time DB Active</span>
                   </p>
                 </div>
 
-                <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-2">
+                <div className="bg-[#0B0F19] p-5 rounded-2xl border border-amber-500/30 space-y-2">
                   <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-xs font-semibold uppercase tracking-wider">Billing Mode</span>
+                    <span className="text-xs font-bold uppercase tracking-wider font-mono text-amber-400">Monetization Mode</span>
                     <CreditCard className="w-4 h-4 text-amber-400" />
                   </div>
                   <div className="text-xl font-bold text-white">
@@ -677,27 +604,28 @@ export const AdminPanel: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-2">
+                <div className="bg-[#0B0F19] p-5 rounded-2xl border border-white/10 space-y-2">
                   <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-xs font-semibold uppercase tracking-wider">Software Version</span>
+                    <span className="text-xs font-bold uppercase tracking-wider font-mono">EXE Release</span>
                     <Zap className="w-4 h-4 text-amber-400" />
                   </div>
                   <div className="text-xl font-bold text-white">v{formData.downloadsInfo.version}</div>
-                  <p className="text-xs text-slate-400">Release: {formData.downloadsInfo.releaseDate}</p>
+                  <p className="text-xs text-slate-400">Size: {formData.downloadsInfo.fileSize}</p>
                 </div>
 
-                <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-2">
+                <div className="bg-[#0B0F19] p-5 rounded-2xl border border-white/10 space-y-2">
                   <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-xs font-semibold uppercase tracking-wider">Overall Status</span>
+                    <span className="text-xs font-bold uppercase tracking-wider font-mono">System Health</span>
                     <Radio className="w-4 h-4 text-cyan-400" />
                   </div>
                   <div className="text-xl font-bold text-emerald-400">{formData.systemStatus.overallStatus}</div>
-                  <p className="text-xs text-slate-400">Checked: {formData.systemStatus.lastChecked}</p>
+                  <p className="text-xs text-slate-400">Latency: 38ms</p>
                 </div>
+
               </div>
 
               {/* Visual Telemetry Chart Simulation */}
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -712,11 +640,11 @@ export const AdminPanel: React.FC = () => {
                 </div>
 
                 {/* SVG Bar Chart Visualization */}
-                <div className="h-40 flex items-end justify-between gap-2 pt-4 px-2 border-b border-white/10">
+                <div className="h-44 flex items-end justify-between gap-2 pt-4 px-2 border-b border-white/10">
                   {[65, 45, 78, 92, 60, 85, 110, 95, 130, 145, 120, 160, 185, 170, 195].map((val, idx) => (
                     <div key={idx} className="flex-1 flex flex-col items-center gap-1 group">
                       <div 
-                        className="w-full rounded-t-lg bg-gradient-to-t from-cyan-600/40 to-cyan-400 transition-all group-hover:to-cyan-300 group-hover:shadow-lg group-hover:shadow-cyan-500/30"
+                        className="w-full rounded-t-md bg-gradient-to-t from-cyan-600/40 to-cyan-400 transition-all group-hover:to-cyan-300 group-hover:shadow-lg group-hover:shadow-cyan-500/30"
                         style={{ height: `${(val / 200) * 100}%` }}
                       />
                       <span className="text-[9px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -728,7 +656,7 @@ export const AdminPanel: React.FC = () => {
               </div>
 
               {/* Feature Flags Grid */}
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-6">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-bold text-white">Live Feature Flags</h3>
@@ -739,7 +667,7 @@ export const AdminPanel: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {Object.entries(formData.featureFlags).map(([key, val]) => (
-                    <div key={key} className="flex items-center justify-between p-4 rounded-xl glass-panel border border-white/5">
+                    <div key={key} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                       <div>
                         <div className="text-sm font-semibold text-white capitalize">{key.replace(/([A-Z])/g, ' $1')}</div>
                         <div className="text-xs text-slate-400">
@@ -768,13 +696,14 @@ export const AdminPanel: React.FC = () => {
                   ))}
                 </div>
               </div>
+
             </div>
           )}
 
           {/* TAB 2: BILLING CONTROL HUB */}
           {activeTab === 'billing' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-amber-500/30 space-y-6">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-amber-500/30 space-y-6">
                 
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
                   <div>
@@ -805,7 +734,7 @@ export const AdminPanel: React.FC = () => {
                 {/* Amount & Currency Settings */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   
-                  <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-2">
+                  <div className="p-5 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
                     <label className="text-xs font-bold text-slate-300 block uppercase font-mono">
                       Base Monthly Rate (0 = Free Mode)
                     </label>
@@ -826,12 +755,12 @@ export const AdminPanel: React.FC = () => {
                             }
                           }));
                         }}
-                        className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-white font-extrabold text-lg focus:border-amber-400 focus:outline-none"
+                        className="w-full px-3 py-2 rounded-xl bg-[#030712] border border-white/10 text-white font-extrabold text-lg focus:border-amber-400 focus:outline-none"
                       />
                     </div>
                   </div>
 
-                  <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-2">
+                  <div className="p-5 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
                     <label className="text-xs font-bold text-amber-300 block uppercase font-mono">
                       Quarterly Discount (%)
                     </label>
@@ -847,12 +776,12 @@ export const AdminPanel: React.FC = () => {
                           billingSettings: { ...prev.billingSettings, quarterlyDiscountPct: val }
                         }));
                       }}
-                      className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-amber-300 font-extrabold text-lg focus:border-amber-400 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-[#030712] border border-white/10 text-amber-300 font-extrabold text-lg focus:border-amber-400 focus:outline-none"
                     />
                     <span className="text-[10px] text-slate-400 block">3-month billing cycle</span>
                   </div>
 
-                  <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-2">
+                  <div className="p-5 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
                     <label className="text-xs font-bold text-emerald-300 block uppercase font-mono">
                       Yearly Discount (%)
                     </label>
@@ -868,7 +797,7 @@ export const AdminPanel: React.FC = () => {
                           billingSettings: { ...prev.billingSettings, yearlyDiscountPct: val }
                         }));
                       }}
-                      className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-emerald-300 font-extrabold text-lg focus:border-amber-400 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-[#030712] border border-white/10 text-emerald-300 font-extrabold text-lg focus:border-amber-400 focus:outline-none"
                     />
                     <span className="text-[10px] text-slate-400 block">12-month billing cycle</span>
                   </div>
@@ -876,18 +805,18 @@ export const AdminPanel: React.FC = () => {
                 </div>
 
                 {/* Calculated Rate Breakdown Summary Card */}
-                <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
+                <div className="p-5 rounded-xl bg-white/[0.02] border border-white/10 space-y-3">
                   <h4 className="text-xs font-bold text-slate-300 uppercase font-mono">Calculated Price Summary for Users</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="p-3 rounded-xl glass-panel border border-cyan-500/20 space-y-1">
+                    <div className="p-3 rounded-xl bg-[#030712] border border-cyan-500/20 space-y-1">
                       <span className="text-slate-400">Monthly Plan</span>
                       <div className="font-extrabold text-white text-base">
                         {formData.billingSettings?.currencySymbol || '$'}{formData.billingSettings?.billingAmount || 0} / mo
                       </div>
-                      <span className="text-[10px] text-slate-500">Standard rate</span>
+                      <span className="text-[10px] text-slate-500">Standard base rate</span>
                     </div>
 
-                    <div className="p-3 rounded-xl glass-panel border border-amber-500/30 space-y-1">
+                    <div className="p-3 rounded-xl bg-[#030712] border border-amber-500/30 space-y-1">
                       <span className="text-amber-400 font-semibold">Quarterly Plan (Save {formData.billingSettings?.quarterlyDiscountPct || 15}%)</span>
                       <div className="font-extrabold text-white text-base">
                         {formData.billingSettings?.currencySymbol || '$'}{Math.round((formData.billingSettings?.billingAmount || 0) * (1 - (formData.billingSettings?.quarterlyDiscountPct || 15) / 100))} / mo
@@ -897,7 +826,7 @@ export const AdminPanel: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl glass-panel border border-emerald-500/30 space-y-1">
+                    <div className="p-3 rounded-xl bg-[#030712] border border-emerald-500/30 space-y-1">
                       <span className="text-emerald-400 font-semibold">Yearly Plan (Save {formData.billingSettings?.yearlyDiscountPct || 30}%)</span>
                       <div className="font-extrabold text-white text-base">
                         {formData.billingSettings?.currencySymbol || '$'}{Math.round((formData.billingSettings?.billingAmount || 0) * (1 - (formData.billingSettings?.yearlyDiscountPct || 30) / 100))} / mo
@@ -917,7 +846,7 @@ export const AdminPanel: React.FC = () => {
                       ...prev,
                       billingSettings: { ...prev.billingSettings, gatewayStatus: e.target.value as any }
                     }))}
-                    className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm bg-slate-900"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white text-sm"
                   >
                     <option value="Disabled">Disabled (Free Access / Later Gateway Binding)</option>
                     <option value="Stripe Ready">Stripe Gateway Ready (Placeholder Hook)</option>
@@ -933,10 +862,10 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 3: HERO & CAPABILITIES */}
           {activeTab === 'hero' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Tv2 className="w-5 h-5 text-cyan-400" />
-                  <span>Hero Section Headings & Copy</span>
+                  <span>Hero Section Copy & Headings</span>
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -946,7 +875,7 @@ export const AdminPanel: React.FC = () => {
                       type="text"
                       value={formData.hero.badgeText}
                       onChange={(e) => updateHeroField('badgeText', e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white text-sm"
                     />
                   </div>
 
@@ -956,7 +885,7 @@ export const AdminPanel: React.FC = () => {
                       type="text"
                       value={formData.hero.badgeStatus}
                       onChange={(e) => updateHeroField('badgeStatus', e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white text-sm"
                     />
                   </div>
 
@@ -966,7 +895,7 @@ export const AdminPanel: React.FC = () => {
                       type="text"
                       value={formData.hero.title}
                       onChange={(e) => updateHeroField('title', e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white text-sm"
                     />
                   </div>
 
@@ -976,7 +905,7 @@ export const AdminPanel: React.FC = () => {
                       type="text"
                       value={formData.hero.subtitle}
                       onChange={(e) => updateHeroField('subtitle', e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white text-sm"
                     />
                   </div>
                 </div>
@@ -987,13 +916,13 @@ export const AdminPanel: React.FC = () => {
                     rows={2}
                     value={formData.hero.description}
                     onChange={(e) => updateHeroField('description', e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white text-sm"
                   />
                 </div>
               </div>
 
               {/* 5 Capability Cards */}
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-violet-400" />
                   <span>5 Capability Showcase Cards</span>
@@ -1001,14 +930,14 @@ export const AdminPanel: React.FC = () => {
 
                 <div className="space-y-4">
                   {formData.capabilityCards.map((card, i) => (
-                    <div key={i} className="p-4 rounded-2xl glass-panel border border-white/10 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                    <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/10 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
                       <div className="sm:col-span-3">
                         <label className="text-[10px] text-slate-400 block uppercase font-mono">Title</label>
                         <input
                           type="text"
                           value={card.title}
                           onChange={(e) => updateCapabilityCard(i, 'title', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-white text-sm font-semibold"
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030712] border border-white/10 text-white text-sm font-semibold"
                         />
                       </div>
                       <div className="sm:col-span-6">
@@ -1017,7 +946,7 @@ export const AdminPanel: React.FC = () => {
                           type="text"
                           value={card.desc}
                           onChange={(e) => updateCapabilityCard(i, 'desc', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-slate-200 text-xs"
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030712] border border-white/10 text-slate-200 text-xs"
                         />
                       </div>
                       <div className="sm:col-span-3">
@@ -1042,7 +971,7 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 4: BENTO SHOWCASE */}
           {activeTab === 'bento' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Grid className="w-5 h-5 text-emerald-400" />
                   <span>Bento Grid Showcase Cards</span>
@@ -1050,7 +979,7 @@ export const AdminPanel: React.FC = () => {
 
                 <div className="space-y-4">
                   {formData.bentoCards.map((bento, i) => (
-                    <div key={i} className="p-4 rounded-2xl glass-panel border border-white/10 space-y-3">
+                    <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="text-[10px] text-slate-400 block uppercase font-mono">Card Title</label>
@@ -1058,7 +987,7 @@ export const AdminPanel: React.FC = () => {
                             type="text"
                             value={bento.title}
                             onChange={(e) => updateBentoCard(i, 'title', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-white text-sm font-semibold"
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030712] border border-white/10 text-white text-sm font-semibold"
                           />
                         </div>
                         <div>
@@ -1067,7 +996,7 @@ export const AdminPanel: React.FC = () => {
                             type="text"
                             value={bento.badge}
                             onChange={(e) => updateBentoCard(i, 'badge', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-cyan-300 text-xs font-mono"
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030712] border border-white/10 text-cyan-300 text-xs font-mono"
                           />
                         </div>
                       </div>
@@ -1077,7 +1006,7 @@ export const AdminPanel: React.FC = () => {
                           rows={2}
                           value={bento.desc}
                           onChange={(e) => updateBentoCard(i, 'desc', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-slate-300 text-xs"
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030712] border border-white/10 text-slate-300 text-xs"
                         />
                       </div>
                     </div>
@@ -1090,42 +1019,42 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 5: PRICING TIERS */}
           {activeTab === 'pricing' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-6">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-6">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-amber-400" />
-                  <span>Pricing Plans & Tiers</span>
+                  <span>Pricing Tiers & Plan Offerings</span>
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {formData.pricingTiers.map((tier, i) => (
-                    <div key={i} className="p-5 rounded-2xl glass-panel border border-white/10 space-y-4">
+                    <div key={i} className="p-5 rounded-xl bg-white/[0.02] border border-white/10 space-y-4">
                       <div>
                         <label className="text-[10px] text-slate-400 block uppercase font-mono">Plan Name</label>
                         <input
                           type="text"
                           value={tier.name}
                           onChange={(e) => updatePricingTier(i, 'name', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-white font-bold text-base"
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030712] border border-white/10 text-white font-bold text-base"
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[10px] text-slate-400 block uppercase font-mono">Monthly Rate</label>
+                          <label className="text-[10px] text-slate-400 block uppercase font-mono">Monthly Price</label>
                           <input
                             type="text"
                             value={tier.priceMonthly}
                             onChange={(e) => updatePricingTier(i, 'priceMonthly', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-cyan-300 font-bold text-sm"
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030712] border border-white/10 text-cyan-300 font-bold text-sm"
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] text-slate-400 block uppercase font-mono">Yearly Rate</label>
+                          <label className="text-[10px] text-slate-400 block uppercase font-mono">Yearly Price</label>
                           <input
                             type="text"
                             value={tier.priceYearly}
                             onChange={(e) => updatePricingTier(i, 'priceYearly', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-cyan-300 font-bold text-sm"
+                            className="w-full px-3 py-1.5 rounded-lg bg-[#030712] border border-white/10 text-cyan-300 font-bold text-sm"
                           />
                         </div>
                       </div>
@@ -1136,14 +1065,14 @@ export const AdminPanel: React.FC = () => {
                           type="text"
                           value={tier.cta}
                           onChange={(e) => updatePricingTier(i, 'cta', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-slate-200 text-xs font-semibold"
+                          className="w-full px-3 py-1.5 rounded-lg bg-[#030712] border border-white/10 text-slate-200 text-xs font-semibold"
                         />
                       </div>
 
                       {/* Feature Bullet Points */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <label className="text-[10px] text-slate-400 uppercase font-mono">Included Features</label>
+                          <label className="text-[10px] text-slate-400 uppercase font-mono">Features List</label>
                           <button
                             onClick={() => addPricingFeature(i)}
                             className="text-xs text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
@@ -1158,7 +1087,7 @@ export const AdminPanel: React.FC = () => {
                                 type="text"
                                 value={feat}
                                 onChange={(e) => updatePricingFeature(i, fIndex, e.target.value)}
-                                className="flex-1 px-2.5 py-1 rounded-md glass-panel border border-white/10 text-xs text-slate-300"
+                                className="flex-1 px-2.5 py-1 rounded-md bg-[#030712] border border-white/10 text-xs text-slate-300"
                               />
                               <button
                                 onClick={() => deletePricingFeature(i, fIndex)}
@@ -1181,11 +1110,11 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 6: FAQ MANAGER */}
           {activeTab === 'faq' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <HelpCircle className="w-5 h-5 text-blue-400" />
-                    <span>FAQ Manager</span>
+                    <span>FAQ Knowledge Items</span>
                   </h3>
                   <button
                     onClick={addFaq}
@@ -1198,7 +1127,7 @@ export const AdminPanel: React.FC = () => {
 
                 <div className="space-y-4">
                   {formData.faqItems.map((faq, i) => (
-                    <div key={i} className="p-4 rounded-2xl glass-panel border border-white/10 space-y-3 relative">
+                    <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-3 relative">
                       <button
                         onClick={() => deleteFaq(i)}
                         className="absolute top-4 right-4 p-2 text-slate-500 hover:text-rose-400 rounded-lg cursor-pointer"
@@ -1212,7 +1141,7 @@ export const AdminPanel: React.FC = () => {
                           type="text"
                           value={faq.q}
                           onChange={(e) => updateFaq(i, 'q', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-white font-semibold text-sm"
+                          className="w-full px-3 py-2 rounded-xl bg-[#030712] border border-white/10 text-white font-semibold text-sm"
                         />
                       </div>
 
@@ -1222,7 +1151,7 @@ export const AdminPanel: React.FC = () => {
                           rows={2}
                           value={faq.a}
                           onChange={(e) => updateFaq(i, 'a', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-slate-300 text-xs"
+                          className="w-full px-3 py-2 rounded-xl bg-[#030712] border border-white/10 text-slate-300 text-xs"
                         />
                       </div>
                     </div>
@@ -1235,7 +1164,7 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 7: BANNER & FLAGS */}
           {activeTab === 'banner' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Megaphone className="w-5 h-5 text-rose-400" />
@@ -1271,7 +1200,7 @@ export const AdminPanel: React.FC = () => {
                         ...prev,
                         announcementBanner: { ...prev.announcementBanner, badge: e.target.value }
                       }))}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white text-sm"
                     />
                   </div>
                 </div>
@@ -1285,7 +1214,7 @@ export const AdminPanel: React.FC = () => {
                       ...prev,
                       announcementBanner: { ...prev.announcementBanner, text: e.target.value }
                     }))}
-                    className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white text-sm"
                   />
                 </div>
               </div>
@@ -1295,10 +1224,10 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 8: RELEASES & DOWNLOADS */}
           {activeTab === 'downloads' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Download className="w-5 h-5 text-cyan-400" />
-                  <span>Installer Releases & Software Config</span>
+                  <span>Windows Installer Releases & Config</span>
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1311,7 +1240,7 @@ export const AdminPanel: React.FC = () => {
                         ...prev,
                         downloadsInfo: { ...prev.downloadsInfo, version: e.target.value }
                       }))}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white font-mono text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white font-mono text-sm"
                     />
                   </div>
 
@@ -1324,13 +1253,13 @@ export const AdminPanel: React.FC = () => {
                         ...prev,
                         downloadsInfo: { ...prev.downloadsInfo, fileSize: e.target.value }
                       }))}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white font-mono text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-white font-mono text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Direct Download Link (.exe)</label>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Direct Download URL (.exe)</label>
                   <input
                     type="text"
                     value={formData.downloadsInfo.exeDownloadUrl}
@@ -1338,7 +1267,7 @@ export const AdminPanel: React.FC = () => {
                       ...prev,
                       downloadsInfo: { ...prev.downloadsInfo, exeDownloadUrl: e.target.value }
                     }))}
-                    className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-cyan-300 font-mono text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#030712] border border-white/10 text-cyan-300 font-mono text-sm"
                   />
                 </div>
               </div>
@@ -1348,7 +1277,7 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 9: INTEGRATIONS & AI ENDPOINTS */}
           {activeTab === 'integrations' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Server className="w-5 h-5 text-teal-400" />
                   <span>AI Endpoints & Model Bridges</span>
@@ -1356,7 +1285,7 @@ export const AdminPanel: React.FC = () => {
 
                 <div className="space-y-3">
                   {formData.integrations.map((integ) => (
-                    <div key={integ.id} className="p-4 rounded-2xl glass-panel border border-white/10 flex items-center justify-between gap-4">
+                    <div key={integ.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/10 flex items-center justify-between gap-4">
                       <div className="space-y-1">
                         <div className="font-semibold text-white text-sm flex items-center gap-2">
                           <span>{integ.name}</span>
@@ -1368,10 +1297,10 @@ export const AdminPanel: React.FC = () => {
                       </div>
 
                       <button
-                        onClick={() => showToast(`Tested ping for ${integ.name}: ${integ.latency}`)}
+                        onClick={() => showToast(`Tested health ping for ${integ.name}: ${integ.latency}`)}
                         className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-cyan-300 font-semibold border border-white/10 cursor-pointer"
                       >
-                        Test Health Ping
+                        Test Ping
                       </button>
                     </div>
                   ))}
@@ -1383,7 +1312,7 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 10: WORKFLOW PRESET MACROS */}
           {activeTab === 'macros' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Terminal className="w-5 h-5 text-purple-400" />
@@ -1399,7 +1328,7 @@ export const AdminPanel: React.FC = () => {
 
                 <div className="space-y-3">
                   {formData.macroPresets.map((m) => (
-                    <div key={m.id} className="p-4 rounded-2xl glass-panel border border-white/10 flex items-center justify-between gap-4">
+                    <div key={m.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/10 flex items-center justify-between gap-4">
                       <div className="space-y-1">
                         <div className="font-bold text-white text-sm flex items-center gap-2">
                           <span>{m.name}</span>
@@ -1426,10 +1355,10 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 11: THEME & STYLING */}
           {activeTab === 'theme' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Palette className="w-5 h-5 text-pink-400" />
-                  <span>Theme & Aesthetic Styling</span>
+                  <span>Theme & Customizer</span>
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1453,55 +1382,100 @@ export const AdminPanel: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 12: USERS & PERMISSIONS */}
+          {/* TAB 12: USERS & PERMISSIONS (REAL FIRESTORE USERS LIST) */}
           {activeTab === 'users' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Users className="w-5 h-5 text-indigo-400" />
-                    <span>Registered Firebase Users & Roles</span>
-                  </h3>
-                  <button
-                    onClick={loadUsers}
-                    className="text-xs text-cyan-400 hover:underline cursor-pointer"
-                  >
-                    Refresh List
-                  </button>
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
+                
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Users className="w-5 h-5 text-indigo-400" />
+                      <span>Firebase Firestore User Directory</span>
+                    </h3>
+                    <p className="text-xs text-slate-400">Manage registered user accounts, roles, and administrative privileges in real-time.</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:w-64">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Filter users by email/name..."
+                        value={userFilter}
+                        onChange={(e) => setUserFilter(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[#030712] border border-white/10 text-white text-xs"
+                      />
+                    </div>
+                    <button
+                      onClick={loadUsers}
+                      className="px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-semibold border border-cyan-500/30 flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${loadingUsers ? 'animate-spin' : ''}`} />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
                 </div>
 
                 {loadingUsers ? (
-                  <div className="text-center py-8 text-slate-400 text-sm">Loading users from Firestore...</div>
+                  <div className="text-center py-12 text-slate-400 text-sm flex flex-col items-center gap-2">
+                    <RefreshCw className="w-6 h-6 text-cyan-400 animate-spin" />
+                    <span>Querying Firestore user database...</span>
+                  </div>
                 ) : (
                   <div className="space-y-3">
-                    {usersList.map((u, i) => (
-                      <div key={i} className="p-4 rounded-2xl glass-panel border border-white/10 flex items-center justify-between gap-4">
-                        <div className="space-y-0.5">
-                          <div className="font-semibold text-sm text-white flex items-center gap-2">
-                            <span>{u.displayName || u.email}</span>
-                            {u.role === 'admin' && (
-                              <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-bold uppercase">
-                                ADMIN
-                              </span>
-                            )}
+                    {filteredUsers.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500 text-xs">No users matching filter criteria.</div>
+                    ) : (
+                      filteredUsers.map((u, i) => (
+                        <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/10 flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center font-bold text-cyan-300 text-sm">
+                              {(u.displayName || u.email || 'U')[0].toUpperCase()}
+                            </div>
+                            <div className="space-y-0.5">
+                              <div className="font-semibold text-sm text-white flex items-center gap-2">
+                                <span>{u.displayName || u.email?.split('@')[0]}</span>
+                                {u.role === 'admin' ? (
+                                  <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-mono font-bold uppercase border border-cyan-500/30">
+                                    ADMIN
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-mono">
+                                    USER
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-slate-400 font-mono">{u.email}</div>
+                            </div>
                           </div>
-                          <div className="text-xs text-slate-400 font-mono">{u.email}</div>
-                        </div>
 
-                        <button
-                          onClick={() => handleRoleToggle(u.uid, u.role)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                            u.role === 'admin'
-                              ? 'bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20'
-                              : 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20'
-                          }`}
-                        >
-                          {u.role === 'admin' ? 'Demote to User' : 'Make Admin'}
-                        </button>
-                      </div>
-                    ))}
+                          <button
+                            onClick={() => handleRoleToggle(u.uid, u.role)}
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                              u.role === 'admin'
+                                ? 'bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20'
+                                : 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20'
+                            }`}
+                          >
+                            {u.role === 'admin' ? (
+                              <>
+                                <UserX className="w-3.5 h-3.5" />
+                                <span>Revoke Admin</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="w-3.5 h-3.5" />
+                                <span>Promote to Admin</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
+
               </div>
             </div>
           )}
@@ -1509,10 +1483,10 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 13: AUDIT LOGS */}
           {activeTab === 'logs' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="bg-[#0B0F19] p-6 rounded-2xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Clock className="w-5 h-5 text-slate-400" />
-                  <span>Audit Logs & Admin Trail</span>
+                  <span>Audit Logs & Admin Actions Trail</span>
                 </h3>
 
                 <div className="space-y-2">
