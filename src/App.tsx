@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SiteProvider } from './context/SiteContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
@@ -19,16 +19,52 @@ export const MainAppContent: React.FC = () => {
   const [activeView, setActiveView] = useState('home');
   const [authModal, setAuthModal] = useState<'signin' | 'signup' | null>(null);
 
+  // Secret Unique Routing Listener for Admin Panel Access
+  useEffect(() => {
+    const handleUrlRoute = () => {
+      const hash = window.location.hash;
+      const search = window.location.search;
+      const path = window.location.pathname;
+
+      if (
+        hash.includes('admin-control-portal') ||
+        hash.includes('admin') ||
+        search.includes('route=admin-portal') ||
+        search.includes('admin=true') ||
+        path.includes('admin-control-portal')
+      ) {
+        setActiveView('admin');
+      }
+    };
+
+    handleUrlRoute();
+    window.addEventListener('hashchange', handleUrlRoute);
+    window.addEventListener('popstate', handleUrlRoute);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlRoute);
+      window.removeEventListener('popstate', handleUrlRoute);
+    };
+  }, []);
+
+  const handleSetView = (view: string) => {
+    setActiveView(view);
+    if (view === 'admin') {
+      window.location.hash = '#/admin-control-portal';
+    } else if (window.location.hash.includes('admin')) {
+      window.location.hash = '';
+    }
+  };
+
   const renderCurrentView = () => {
     switch (activeView) {
       case 'home':
-        return <HomeView setActiveView={setActiveView} />;
+        return <HomeView setActiveView={handleSetView} />;
       case 'features':
         return <FeaturesView />;
       case 'capabilities':
         return <CapabilitiesView />;
       case 'pricing':
-        return <PricingView onSelectPlan={() => setActiveView('download')} />;
+        return <PricingView onSelectPlan={() => handleSetView('download')} />;
       case 'download':
         return <DownloadView />;
       case 'docs':
@@ -46,16 +82,16 @@ export const MainAppContent: React.FC = () => {
       case 'security':
         return <DocsView />;
       default:
-        return <NotFoundView setActiveView={setActiveView} />;
+        return <NotFoundView setActiveView={handleSetView} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-[#02040A] text-slate-100 font-sans selection:bg-cyan-500 selection:text-black flex flex-col justify-between">
-      {/* Top Navbar */}
+      {/* Top Navbar (Public - Admin Button Hidden) */}
       <Navbar
         activeView={activeView}
-        setActiveView={setActiveView}
+        setActiveView={handleSetView}
         onOpenAuth={(mode) => setAuthModal(mode)}
       />
 
@@ -65,7 +101,7 @@ export const MainAppContent: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <Footer setActiveView={setActiveView} />
+      <Footer setActiveView={handleSetView} />
 
       {/* Auth Modal Overlay */}
       {authModal && (
