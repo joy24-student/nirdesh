@@ -17,11 +17,11 @@ export const Hero: React.FC<HeroProps> = ({ onLaunch, onWatchVideo, onViewStatus
   return (
     <section className="relative min-h-screen flex flex-col justify-between pt-28 pb-12 overflow-hidden">
       
-      {/* Hero Cinematic Background Image Overlay */}
+      {/* Hero Background Image Overlay (Full Brightness & Crisp Clarity) */}
       <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105"
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105 opacity-90"
         style={{
-          backgroundImage: `linear-gradient(180deg, rgba(2, 4, 10, 0.45) 0%, rgba(2, 4, 10, 0.85) 75%, #02040A 100%), url('/asset/herobackground.png')`,
+          backgroundImage: `linear-gradient(180deg, rgba(2, 4, 10, 0.15) 0%, rgba(2, 4, 10, 0.35) 75%, #02040A 100%), url('/asset/herobackground.png')`,
         }}
       />
 

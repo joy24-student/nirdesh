@@ -11,8 +11,7 @@ import {
   User, 
   Download, 
   ShieldCheck, 
-  LogOut,
-  Megaphone
+  LogOut
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -84,24 +83,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView, onOpe
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             
-            {/* Brand & Logo */}
+            {/* Brand Logo Only (Larger Image, Extra Text Removed) */}
             <button
               onClick={() => handleNavClick('home')}
-              className="flex items-center gap-3 group text-left cursor-pointer focus:outline-none"
+              className="flex items-center group text-left cursor-pointer focus:outline-none"
             >
-              <div className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 border border-cyan-500/30 group-hover:border-cyan-400 transition-all shadow-lg shadow-cyan-500/10">
-                <img
-                  src="/asset/logo.png"
-                  alt="Nirdesh Logo"
-                  className="w-7 h-7 object-contain group-hover:scale-105 transition-transform"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
-              </div>
-              <span className="font-extrabold text-xl tracking-tight text-white group-hover:text-cyan-400 transition-colors">
-                NIRDESH
-              </span>
+              <img
+                src="/asset/logo.png"
+                alt="Nirdesh Logo"
+                className="h-11 sm:h-14 w-auto max-w-[220px] object-contain group-hover:scale-105 transition-transform filter drop-shadow-[0_0_12px_rgba(0,200,255,0.4)]"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
             </button>
 
             {/* Desktop Nav Items */}
@@ -158,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView, onOpe
                 </div>
               ))}
 
-              {/* Admin Panel Button (If Admin or Demo Admin mode) */}
+              {/* Admin Panel Button */}
               {isAdmin && (
                 <button
                   onClick={() => handleNavClick('admin')}
