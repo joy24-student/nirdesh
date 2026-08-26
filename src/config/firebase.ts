@@ -7,6 +7,7 @@ import {
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
@@ -90,6 +91,16 @@ export const signInWithEmail = async (email: string, pass: string) => {
       displayName: email.split('@')[0],
       email: email
     };
+  }
+};
+
+export const resetPassword = async (email: string) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return { success: true, message: "Password reset instructions sent to email." };
+  } catch (err: any) {
+    console.warn("Password reset notice:", err?.message || err);
+    return { success: false, error: err?.message || "Password reset failed" };
   }
 };
 
