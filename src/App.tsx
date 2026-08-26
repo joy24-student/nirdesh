@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SiteProvider } from './context/SiteContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { HomeView } from './components/views/HomeView';
@@ -11,12 +12,12 @@ import { SupportView } from './components/views/SupportView';
 import { StatusView } from './components/views/StatusView';
 import { AuthViews } from './components/views/AuthViews';
 import { AboutView } from './components/views/AboutView';
+import { AdminPanel } from './components/admin/AdminPanel';
 import { NotFoundView } from './components/views/NotFoundView';
 
-export const App: React.FC = () => {
+export const MainAppContent: React.FC = () => {
   const [activeView, setActiveView] = useState('home');
   const [authModal, setAuthModal] = useState<'signin' | 'signup' | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const renderCurrentView = () => {
     switch (activeView) {
@@ -38,6 +39,8 @@ export const App: React.FC = () => {
         return <StatusView />;
       case 'about':
         return <AboutView />;
+      case 'admin':
+        return <AdminPanel />;
       case 'privacy':
       case 'terms':
       case 'security':
@@ -54,7 +57,6 @@ export const App: React.FC = () => {
         activeView={activeView}
         setActiveView={setActiveView}
         onOpenAuth={(mode) => setAuthModal(mode)}
-        currentUser={currentUser}
       />
 
       {/* Main View Area */}
@@ -70,10 +72,18 @@ export const App: React.FC = () => {
         <AuthViews
           mode={authModal}
           onClose={() => setAuthModal(null)}
-          onSuccess={(user) => setCurrentUser(user)}
+          onSuccess={() => {}}
         />
       )}
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <SiteProvider>
+      <MainAppContent />
+    </SiteProvider>
   );
 };
 

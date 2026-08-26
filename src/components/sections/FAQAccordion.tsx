@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { FAQ_ITEMS } from '../../config/siteData';
-import { ChevronDown, HelpCircle } from 'lucide-react';
+import { useSiteContext } from '../../context/SiteContext';
+import { ChevronDown } from 'lucide-react';
 
 export const FAQAccordion: React.FC = () => {
+  const { siteConfig } = useSiteContext();
+  const faqItems = siteConfig.faqItems || [];
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const toggle = (idx: number) => {
@@ -26,12 +28,12 @@ export const FAQAccordion: React.FC = () => {
         </div>
 
         <div className="space-y-4">
-          {FAQ_ITEMS.map((item, idx) => {
+          {faqItems.map((item, idx) => {
             const isOpen = openIndex === idx;
 
             return (
               <div
-                key={item.q}
+                key={item.q + idx}
                 className="glass-panel rounded-2xl border border-white/10 overflow-hidden transition-all duration-300"
               >
                 <button

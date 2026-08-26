@@ -1,10 +1,13 @@
 import React from 'react';
-import { BENTO_CARDS } from '../../config/siteData';
-import { Brain, Eye, Database, Zap, Mic, ShieldCheck, Sparkles, Folder, Globe, AppWindow } from 'lucide-react';
+import { useSiteContext } from '../../context/SiteContext';
+import { Brain, Eye, Database, Zap, Mic, ShieldCheck, Sparkles } from 'lucide-react';
 
 const ICON_LIST = [Brain, Eye, Database, Zap, Mic, ShieldCheck];
 
 export const BentoGrid: React.FC = () => {
+  const { siteConfig } = useSiteContext();
+  const bentoCards = siteConfig.bentoCards || [];
+
   return (
     <section className="py-24 bg-[#02040A] relative overflow-hidden border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,15 +26,15 @@ export const BentoGrid: React.FC = () => {
 
         {/* Bento Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {BENTO_CARDS.map((card, idx) => {
+          {bentoCards.map((card, idx) => {
             const IconComp = ICON_LIST[idx % ICON_LIST.length];
             return (
               <div
-                key={card.title}
-                className={`glass-panel p-8 rounded-3xl border border-white/10 hover:border-cyan-500/40 transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between ${card.colSpan}`}
+                key={card.title + idx}
+                className={`glass-panel p-8 rounded-3xl border border-white/10 hover:border-cyan-500/40 transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between ${card.colSpan || 'col-span-1'}`}
               >
                 {/* Background Subtle Gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient || 'from-cyan-600/20 to-blue-500/10'} opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none`} />
 
                 <div className="relative z-10 space-y-4">
                   <div className="flex items-center justify-between">

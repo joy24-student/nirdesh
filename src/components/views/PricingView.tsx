@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { PRICING_TIERS } from '../../config/siteData';
-import { Check, Sparkles, ArrowRight } from 'lucide-react';
+import { useSiteContext } from '../../context/SiteContext';
+import { Check, ArrowRight } from 'lucide-react';
 
 interface PricingViewProps {
   onSelectPlan: (planName: string) => void;
 }
 
 export const PricingView: React.FC<PricingViewProps> = ({ onSelectPlan }) => {
+  const { siteConfig } = useSiteContext();
+  const pricingTiers = siteConfig.pricingTiers || [];
   const [isYearly, setIsYearly] = useState(true);
 
   return (
@@ -46,9 +48,9 @@ export const PricingView: React.FC<PricingViewProps> = ({ onSelectPlan }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {PRICING_TIERS.map((tier) => (
+        {pricingTiers.map((tier, idx) => (
           <div
-            key={tier.name}
+            key={tier.name + idx}
             className={`glass-panel p-8 rounded-3xl border transition-all duration-300 flex flex-col justify-between relative ${
               tier.highlight
                 ? 'border-cyan-400 bg-cyan-500/10 shadow-2xl shadow-cyan-950/60 scale-105'
@@ -75,8 +77,8 @@ export const PricingView: React.FC<PricingViewProps> = ({ onSelectPlan }) => {
               </div>
 
               <div className="space-y-3 pt-4 border-t border-white/10 text-xs text-slate-300">
-                {tier.features.map((feat) => (
-                  <div key={feat} className="flex items-center gap-2.5">
+                {tier.features.map((feat, fIdx) => (
+                  <div key={fIdx} className="flex items-center gap-2.5">
                     <Check className="w-4 h-4 text-cyan-400 shrink-0" />
                     <span>{feat}</span>
                   </div>

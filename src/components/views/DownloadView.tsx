@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Download, Monitor, CheckCircle, ShieldCheck, Cpu, HardDrive } from 'lucide-react';
+import { useSiteContext } from '../../context/SiteContext';
+import { Download, Monitor, Cpu, HardDrive } from 'lucide-react';
 
 export const DownloadView: React.FC = () => {
+  const { siteConfig } = useSiteContext();
+  const dl = siteConfig.downloadsInfo;
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
 
@@ -10,11 +13,20 @@ export const DownloadView: React.FC = () => {
     setTimeout(() => {
       setDownloading(false);
       setDownloaded(true);
-    }, 2000);
+      // Trigger download link if URL provided
+      if (dl.exeDownloadUrl) {
+        const link = document.createElement('a');
+        link.href = dl.exeDownloadUrl;
+        link.download = `NIRDESH-Setup-v${dl.version}.exe`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }, 1500);
   };
 
   return (
-    <div className="pt-28 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+    <div className="pt-28 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 animate-fadeIn">
       
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 px-3 py-1 rounded-full glass-panel border border-cyan-500/30">
@@ -36,14 +48,19 @@ export const DownloadView: React.FC = () => {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-3xl font-extrabold text-white">Nirdesh Desktop v6.0.0</h2>
-          <div className="flex items-center justify-center gap-4 text-xs font-mono text-cyan-400">
-            <span>Size: 142 MB</span>
+          <h2 className="text-3xl font-extrabold text-white">Nirdesh Desktop v{dl.version}</h2>
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-cyan-400">
+            <span>Size: {dl.fileSize}</span>
             <span>|</span>
             <span>Architecture: x64 / ARM64</span>
             <span>|</span>
-            <span>SHA-256 Verified</span>
+            <span>Release: {dl.releaseDate}</span>
           </div>
+          {dl.releaseNotes && (
+            <p className="text-xs text-slate-300 max-w-lg mx-auto pt-2 leading-relaxed">
+              {dl.releaseNotes}
+            </p>
+          )}
         </div>
 
         <button
@@ -54,10 +71,10 @@ export const DownloadView: React.FC = () => {
           <Download className={`w-5 h-5 ${downloading ? 'animate-bounce' : ''}`} />
           <span>
             {downloading
-              ? 'Preparing download...'
+              ? 'Preparing download installer...'
               : downloaded
-              ? 'Download Started ✓'
-              : 'Download Nirdesh for Windows'}
+              ? 'Download Initiated ✓'
+              : `Download Nirdesh v${dl.version} for Windows`}
           </span>
         </button>
 
