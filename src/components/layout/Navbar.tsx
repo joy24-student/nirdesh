@@ -89,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView, onOpe
               className="flex items-center group text-left cursor-pointer focus:outline-none"
             >
               <img
-                src="/asset/logo.png"
+                src="/asset/mainlogo.png"
                 alt="Nirdesh Logo"
                 className="h-16 sm:h-20 w-auto max-w-[320px] object-contain group-hover:scale-105 transition-transform filter drop-shadow-[0_0_16px_rgba(0,200,255,0.5)]"
                 onError={(e) => {

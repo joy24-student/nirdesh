@@ -22,7 +22,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveView }) => {
           {/* Brand info */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center">
-              <img src="/asset/logo.png" alt="Nirdesh" className="h-16 sm:h-20 w-auto max-w-[320px] object-contain filter drop-shadow-[0_0_16px_rgba(0,200,255,0.4)]" />
+              <img src="/asset/mainlogo.png" alt="Nirdesh" className="h-16 sm:h-20 w-auto max-w-[320px] object-contain filter drop-shadow-[0_0_16px_rgba(0,200,255,0.4)]" />
             </div>
             <p className="text-slate-400 text-sm max-w-sm leading-relaxed">
               Your PC. Your Command. The intelligent AI PC Agent that understands natural language, reasons about tasks, controls applications, and automates desktop workflows.

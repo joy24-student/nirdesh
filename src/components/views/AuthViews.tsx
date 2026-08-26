@@ -152,7 +152,7 @@ export const AuthViews: React.FC<AuthViewsProps> = ({ mode: initialMode, onClose
         <div className="flex items-center justify-between border-b border-white/10 pb-4 relative z-10">
           <div className="flex items-center">
             <img 
-              src="/asset/logo.png" 
+              src="/asset/mainlogo.png" 
               alt="Nirdesh Logo" 
               className="h-10 sm:h-12 w-auto max-w-[200px] object-contain filter drop-shadow-[0_0_12px_rgba(0,200,255,0.4)]" 
             />
@@ -215,7 +215,7 @@ export const AuthViews: React.FC<AuthViewsProps> = ({ mode: initialMode, onClose
                   
                   {/* Glowing N Emblem Logo Image */}
                   <img
-                    src="/asset/logo.png"
+                    src="/asset/mainlogo.png"
                     alt="Nirdesh Emblem"
                     className="w-28 h-28 object-contain filter drop-shadow-[0_0_20px_rgba(0,200,255,0.8)] group-hover:scale-110 transition-transform duration-500"
                   />
