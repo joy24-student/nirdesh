@@ -91,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, setActiveView, onOpe
               <img
                 src="/asset/logo.png"
                 alt="Nirdesh Logo"
-                className="h-11 sm:h-14 w-auto max-w-[220px] object-contain group-hover:scale-105 transition-transform filter drop-shadow-[0_0_12px_rgba(0,200,255,0.4)]"
+                className="h-16 sm:h-20 w-auto max-w-[320px] object-contain group-hover:scale-105 transition-transform filter drop-shadow-[0_0_16px_rgba(0,200,255,0.5)]"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';
                 }}
