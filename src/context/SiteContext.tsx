@@ -81,6 +81,31 @@ export interface SiteConfig {
     fileSize: string;
     releaseNotes: string;
   };
+  themeSettings: {
+    primaryAccent: string;
+    gradientPreset: 'cyan-violet' | 'emerald-cyan' | 'purple-pink' | 'amber-orange';
+    glowIntensity: number;
+  };
+  integrations: Array<{
+    id: string;
+    name: string;
+    status: 'Online' | 'Offline' | 'Standby';
+    icon: string;
+    latency: string;
+  }>;
+  macroPresets: Array<{
+    id: string;
+    name: string;
+    category: string;
+    desc: string;
+    hotkey: string;
+  }>;
+  auditLogs: Array<{
+    id: string;
+    time: string;
+    action: string;
+    type: 'info' | 'warning' | 'success' | 'alert';
+  }>;
 }
 
 const DEFAULT_SITE_CONFIG: SiteConfig = {
@@ -126,7 +151,29 @@ const DEFAULT_SITE_CONFIG: SiteConfig = {
     exeDownloadUrl: '/downloads/NIRDESH-Setup.exe',
     fileSize: '42.8 MB',
     releaseNotes: 'Includes AI Core v3.2, Vision OCR Engine, Voice Waveform, and local encrypted memory database.'
-  }
+  },
+  themeSettings: {
+    primaryAccent: '#00C8FF',
+    gradientPreset: 'cyan-violet',
+    glowIntensity: 85
+  },
+  integrations: [
+    { id: '1', name: 'OpenAI GPT-4o Bridge', status: 'Online', icon: 'Sparkles', latency: '120ms' },
+    { id: '2', name: 'Anthropic Claude 3.5 Sonnet', status: 'Online', icon: 'Zap', latency: '145ms' },
+    { id: '3', name: 'Google Gemini Vision 1.5', status: 'Online', icon: 'Eye', latency: '95ms' },
+    { id: '4', name: 'Local Ollama Llama-3', status: 'Online', icon: 'Terminal', latency: '12ms' },
+    { id: '5', name: 'Firebase Cloud DB', status: 'Online', icon: 'Database', latency: '28ms' }
+  ],
+  macroPresets: [
+    { id: 'm1', name: 'Dev Environment Setup', category: 'Developer', desc: 'Launch VS Code, Chrome localhost:3000, and Terminal.', hotkey: 'Ctrl+Shift+D' },
+    { id: 'm2', name: 'Clean Temp & Boost RAM', category: 'System Optimization', desc: 'Purge temporary cache files and close heavy idle processes.', hotkey: 'Ctrl+Shift+C' },
+    { id: 'm3', name: 'Smart Screen OCR Summarizer', category: 'Productivity', desc: 'Capture active screen text, extract key points into Notes.', hotkey: 'Ctrl+Alt+S' }
+  ],
+  auditLogs: [
+    { id: 'l1', time: '10 mins ago', action: 'Admin logged in via Firebase OAuth', type: 'info' },
+    { id: 'l2', time: '25 mins ago', action: 'Saved site configuration to Firestore', type: 'success' },
+    { id: 'l3', time: '1 hour ago', action: 'Software Release v6.0.0 updated', type: 'info' }
+  ]
 };
 
 interface SiteContextType {
@@ -146,7 +193,7 @@ const SiteContext = createContext<SiteContextType | undefined>(undefined);
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [siteConfig, setSiteConfig] = useState<SiteConfig>(DEFAULT_SITE_CONFIG);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [demoAdminMode, setDemoAdminMode] = useState<boolean>(true); // Default enabled so admin panel is easily accessible
+  const [demoAdminMode, setDemoAdminMode] = useState<boolean>(true);
   const [userRole, setUserRole] = useState<'admin' | 'user'>('admin');
   const [isFirebaseConnected, setIsFirebaseConnected] = useState<boolean>(!isUsingDummyConfig);
 
