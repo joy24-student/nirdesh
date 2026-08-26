@@ -28,16 +28,14 @@ import {
   Search,
   Palette,
   Terminal,
-  Cpu,
   Server,
-  Maximize2,
-  Minimize2,
-  Smartphone,
-  Laptop,
   Monitor,
-  Bell,
-  Clock,
-  Check
+  Laptop,
+  Smartphone,
+  CreditCard,
+  Calendar,
+  Award,
+  Clock
 } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
@@ -51,7 +49,7 @@ export const AdminPanel: React.FC = () => {
   } = useSiteContext();
 
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'hero' | 'bento' | 'pricing' | 'faq' | 'banner' | 'downloads' | 'users' | 'integrations' | 'macros' | 'theme' | 'logs'
+    'dashboard' | 'billing' | 'hero' | 'bento' | 'pricing' | 'faq' | 'banner' | 'downloads' | 'users' | 'integrations' | 'macros' | 'theme' | 'logs'
   >('dashboard');
 
   const [formData, setFormData] = useState<SiteConfig>(siteConfig);
@@ -93,7 +91,7 @@ export const AdminPanel: React.FC = () => {
     const logEntry = {
       id: `l_${Date.now()}`,
       time: 'Just now',
-      action: 'Admin published updated site configuration to Firebase',
+      action: `Admin updated site configuration (Billing: ${formData.billingSettings?.enableBilling ? `$${formData.billingSettings?.billingAmount}` : 'FREE MODE'})`,
       type: 'success' as const
     };
     const updated = {
@@ -251,13 +249,13 @@ export const AdminPanel: React.FC = () => {
         <div className="space-y-2 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-xs font-semibold text-cyan-400">
             <ShieldCheck className="w-4 h-4" />
-            <span>NIRDESH ULTIMATE ADMIN OPERATIONS HUB v6.0</span>
+            <span>NIRDESH ULTIMATE ADMIN CONTROL CENTER</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Frontend Control Center
+            Frontend & Billing Control Center
           </h1>
           <p className="text-sm text-slate-400 max-w-2xl">
-            Real-time management for site copy, feature flags, pricing, releases, theme customizer, and live sandbox simulator.
+            Control site copy, feature flags, monthly/quarterly/yearly billing amount, releases, theme customizer, and live sandbox simulator.
           </p>
         </div>
 
@@ -371,31 +369,14 @@ export const AdminPanel: React.FC = () => {
                 </div>
               )}
 
-              {/* Hero Preview */}
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel border border-cyan-500/30 text-xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-white font-semibold">{formData.hero.badgeText}</span>
-                  <span className="text-slate-500">|</span>
-                  <span className="text-cyan-300">{formData.hero.badgeStatus}</span>
-                </div>
-
-                <div className="space-y-1">
-                  <h1 className="text-3xl sm:text-5xl font-extrabold text-white">{formData.hero.title}</h1>
-                  <p className="text-xl sm:text-3xl font-bold text-gradient">{formData.hero.subtitle}</p>
-                </div>
-
-                <p className="text-slate-300 text-sm">{formData.hero.description}</p>
-              </div>
-
-              {/* Capability Cards Preview */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {formData.capabilityCards.slice(0, 3).map((c, idx) => (
-                  <div key={idx} className="p-3 rounded-xl glass-panel border border-white/10 space-y-1">
-                    <div className="text-xs font-bold text-cyan-300">{c.title}</div>
-                    <div className="text-[11px] text-slate-400 line-clamp-2">{c.desc}</div>
-                  </div>
-                ))}
+              {/* Billing Mode Status Banner Preview */}
+              <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-xs text-cyan-300 flex items-center justify-between">
+                <span className="font-semibold">
+                  Billing Mode: {formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0 
+                    ? `PAID (${formData.billingSettings?.currencySymbol}${formData.billingSettings?.billingAmount}/mo | Quarterly -${formData.billingSettings?.quarterlyDiscountPct || 15}% | Yearly -${formData.billingSettings?.yearlyDiscountPct || 30}%)` 
+                    : 'FREE ACCESS ($0)'}
+                </span>
+                <span className="text-[10px] text-slate-400">Controlled by Admin</span>
               </div>
 
             </div>
@@ -437,6 +418,28 @@ export const AdminPanel: React.FC = () => {
               </div>
             </button>
 
+            {/* TAB: BILLING & MONETIZATION CONTROL */}
+            <button
+              onClick={() => setActiveTab('billing')}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'billing'
+                  ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-md'
+                  : 'text-amber-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <CreditCard className="w-4 h-4 text-amber-400" />
+                <span>Billing Cycles (Mo/Qtr/Yr)</span>
+              </div>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
+                formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0
+                  ? 'bg-emerald-500/20 text-emerald-300'
+                  : 'bg-slate-800 text-slate-400'
+              }`}>
+                {formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0 ? `$${formData.billingSettings?.billingAmount}` : 'FREE $0'}
+              </span>
+            </button>
+
             <button
               onClick={() => setActiveTab('hero')}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
@@ -475,7 +478,7 @@ export const AdminPanel: React.FC = () => {
             >
               <div className="flex items-center gap-2.5">
                 <DollarSign className="w-4 h-4 text-amber-400" />
-                <span>Pricing & Plans</span>
+                <span>Pricing Tiers</span>
               </div>
             </button>
 
@@ -592,22 +595,6 @@ export const AdminPanel: React.FC = () => {
             </button>
 
           </div>
-
-          {/* Admin Demo Access Panel */}
-          <div className="glass-panel p-4 rounded-2xl border border-white/10 space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-300">Admin Mode</span>
-              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono text-[10px]">
-                {demoAdminMode ? 'ACTIVE' : 'STANDARD'}
-              </span>
-            </div>
-            <button
-              onClick={() => setDemoAdminMode(!demoAdminMode)}
-              className="w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 border border-white/10 transition-all cursor-pointer"
-            >
-              Toggle Demo Admin Override
-            </button>
-          </div>
         </div>
 
         {/* Tab Content Display Area */}
@@ -616,8 +603,6 @@ export const AdminPanel: React.FC = () => {
           {/* TAB 1: DASHBOARD & TELEMETRY */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 animate-fadeIn">
-              
-              {/* Stat Cards Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-2">
                   <div className="flex items-center justify-between text-slate-400">
@@ -627,9 +612,20 @@ export const AdminPanel: React.FC = () => {
                   <div className="text-xl font-bold text-white">
                     {isFirebaseConnected ? 'Firebase Online' : 'Local + Firestore'}
                   </div>
-                  <p className="text-xs text-emerald-400 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Real-time listener active</span>
+                </div>
+
+                <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider">Billing Mode</span>
+                    <CreditCard className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="text-xl font-bold text-white">
+                    {formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0 
+                      ? `${formData.billingSettings.currencySymbol}${formData.billingSettings.billingAmount}/mo` 
+                      : 'FREE ACCESS ($0)'}
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Mo / Qtr (-{formData.billingSettings?.quarterlyDiscountPct || 15}%) / Yr (-{formData.billingSettings?.yearlyDiscountPct || 30}%)
                   </p>
                 </div>
 
@@ -639,16 +635,6 @@ export const AdminPanel: React.FC = () => {
                     <Zap className="w-4 h-4 text-amber-400" />
                   </div>
                   <div className="text-xl font-bold text-white">v{formData.downloadsInfo.version}</div>
-                  <p className="text-xs text-slate-400">Release: {formData.downloadsInfo.releaseDate}</p>
-                </div>
-
-                <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-2">
-                  <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-xs font-semibold uppercase tracking-wider">Active Nodes</span>
-                    <Activity className="w-4 h-4 text-emerald-400" />
-                  </div>
-                  <div className="text-xl font-bold text-white">{formData.systemStatus.activeNodes.toLocaleString()}</div>
-                  <p className="text-xs text-slate-400">Latency: {formData.systemStatus.latencyMs}ms</p>
                 </div>
 
                 <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-2">
@@ -657,95 +643,178 @@ export const AdminPanel: React.FC = () => {
                     <Radio className="w-4 h-4 text-cyan-400" />
                   </div>
                   <div className="text-xl font-bold text-emerald-400">{formData.systemStatus.overallStatus}</div>
-                  <p className="text-xs text-slate-400">Checked: {formData.systemStatus.lastChecked}</p>
                 </div>
               </div>
-
-              {/* Visual Telemetry Chart Simulation */}
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Activity className="w-5 h-5 text-cyan-400" />
-                      <span>Live Telemetry & Execution Traffic</span>
-                    </h3>
-                    <p className="text-xs text-slate-400">AI command execution velocity across active Windows client nodes.</p>
-                  </div>
-                  <span className="text-xs font-mono text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-                    AVG LATENCY 38ms
-                  </span>
-                </div>
-
-                {/* SVG Bar Chart Visualization */}
-                <div className="h-40 flex items-end justify-between gap-2 pt-4 px-2 border-b border-white/10">
-                  {[65, 45, 78, 92, 60, 85, 110, 95, 130, 145, 120, 160, 185, 170, 195].map((val, idx) => (
-                    <div key={idx} className="flex-1 flex flex-col items-center gap-1 group">
-                      <div 
-                        className="w-full rounded-t-lg bg-gradient-to-t from-cyan-600/40 to-cyan-400 transition-all group-hover:to-cyan-300 group-hover:shadow-lg group-hover:shadow-cyan-500/30"
-                        style={{ height: `${(val / 200) * 100}%` }}
-                      />
-                      <span className="text-[9px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {val}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Feature Flags Grid */}
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">Live Feature Flags</h3>
-                    <p className="text-xs text-slate-400">Enable or disable core agent features across all user sessions instantly.</p>
-                  </div>
-                  <Sliders className="w-5 h-5 text-cyan-400" />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {Object.entries(formData.featureFlags).map(([key, val]) => (
-                    <div key={key} className="flex items-center justify-between p-4 rounded-xl glass-panel border border-white/5">
-                      <div>
-                        <div className="text-sm font-semibold text-white capitalize">{key.replace(/([A-Z])/g, ' $1')}</div>
-                        <div className="text-xs text-slate-400">
-                          {val ? 'Enabled & broadcasted to clients' : 'Disabled / Offline'}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            featureFlags: {
-                              ...prev.featureFlags,
-                              [key]: !val
-                            }
-                          }));
-                        }}
-                        className={`w-12 h-6 rounded-full transition-colors relative p-0.5 cursor-pointer ${
-                          val ? 'bg-cyan-500' : 'bg-slate-700'
-                        }`}
-                      >
-                        <div className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                          val ? 'translate-x-6' : 'translate-x-0'
-                        }`} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
             </div>
           )}
 
-          {/* TAB 2: HERO & CAPABILITIES */}
+          {/* TAB: BILLING CONTROL HUB (MONTHLY, QUARTERLY, YEARLY) */}
+          {activeTab === 'billing' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="glass-panel p-6 rounded-3xl border border-amber-500/30 space-y-6">
+                
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-amber-400">
+                      <CreditCard className="w-4 h-4" />
+                      <span>MONTHLY, QUARTERLY & YEARLY PAYMENT LOGIC</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mt-2">Billing Frequencies & Discount Rates</h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Configure base monthly rates, 3-month quarterly discounts, and 12-month annual discounts. Set amount to 0 for Free Mode.
+                    </p>
+                  </div>
+
+                  <div className={`px-4 py-2 rounded-2xl border text-xs font-extrabold flex items-center gap-2 ${
+                    formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                  }`}>
+                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+                    <span>
+                      {formData.billingSettings?.enableBilling && formData.billingSettings?.billingAmount > 0 
+                        ? `PAID MODE ($${formData.billingSettings.billingAmount}/mo)`
+                        : 'FREE MODE ($0)'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Amount & Currency Settings */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-2">
+                    <label className="text-xs font-bold text-slate-300 block uppercase font-mono">
+                      Base Monthly Rate (0 = Free Mode)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl font-bold text-cyan-400">{formData.billingSettings?.currencySymbol || '$'}</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.billingSettings?.billingAmount ?? 0}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setFormData((prev) => ({
+                            ...prev,
+                            billingSettings: {
+                              ...prev.billingSettings,
+                              billingAmount: val,
+                              enableBilling: val > 0 ? true : prev.billingSettings?.enableBilling
+                            }
+                          }));
+                        }}
+                        className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-white font-extrabold text-lg focus:border-amber-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-2">
+                    <label className="text-xs font-bold text-amber-300 block uppercase font-mono">
+                      Quarterly Discount (%)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={90}
+                      value={formData.billingSettings?.quarterlyDiscountPct ?? 15}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setFormData((prev) => ({
+                          ...prev,
+                          billingSettings: { ...prev.billingSettings, quarterlyDiscountPct: val }
+                        }));
+                      }}
+                      className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-amber-300 font-extrabold text-lg focus:border-amber-400 focus:outline-none"
+                    />
+                    <span className="text-[10px] text-slate-400 block">3-month billing cycle</span>
+                  </div>
+
+                  <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-2">
+                    <label className="text-xs font-bold text-emerald-300 block uppercase font-mono">
+                      Yearly Discount (%)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={90}
+                      value={formData.billingSettings?.yearlyDiscountPct ?? 30}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setFormData((prev) => ({
+                          ...prev,
+                          billingSettings: { ...prev.billingSettings, yearlyDiscountPct: val }
+                        }));
+                      }}
+                      className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-emerald-300 font-extrabold text-lg focus:border-amber-400 focus:outline-none"
+                    />
+                    <span className="text-[10px] text-slate-400 block">12-month billing cycle</span>
+                  </div>
+
+                </div>
+
+                {/* Calculated Rate Breakdown Summary Card */}
+                <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase font-mono">Calculated Price Summary for Users</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="p-3 rounded-xl glass-panel border border-cyan-500/20 space-y-1">
+                      <span className="text-slate-400">Monthly Plan</span>
+                      <div className="font-extrabold text-white text-base">
+                        {formData.billingSettings?.currencySymbol || '$'}{formData.billingSettings?.billingAmount || 0} / mo
+                      </div>
+                      <span className="text-[10px] text-slate-500">Standard rate</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl glass-panel border border-amber-500/30 space-y-1">
+                      <span className="text-amber-400 font-semibold">Quarterly Plan (Save {formData.billingSettings?.quarterlyDiscountPct || 15}%)</span>
+                      <div className="font-extrabold text-white text-base">
+                        {formData.billingSettings?.currencySymbol || '$'}{Math.round((formData.billingSettings?.billingAmount || 0) * (1 - (formData.billingSettings?.quarterlyDiscountPct || 15) / 100))} / mo
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        Billed {formData.billingSettings?.currencySymbol || '$'}{Math.round((formData.billingSettings?.billingAmount || 0) * (1 - (formData.billingSettings?.quarterlyDiscountPct || 15) / 100)) * 3} every 3 months
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-xl glass-panel border border-emerald-500/30 space-y-1">
+                      <span className="text-emerald-400 font-semibold">Yearly Plan (Save {formData.billingSettings?.yearlyDiscountPct || 30}%)</span>
+                      <div className="font-extrabold text-white text-base">
+                        {formData.billingSettings?.currencySymbol || '$'}{Math.round((formData.billingSettings?.billingAmount || 0) * (1 - (formData.billingSettings?.yearlyDiscountPct || 30) / 100))} / mo
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        Billed {formData.billingSettings?.currencySymbol || '$'}{Math.round((formData.billingSettings?.billingAmount || 0) * (1 - (formData.billingSettings?.yearlyDiscountPct || 30) / 100)) * 12} annually
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Payment Gateway Readiness</label>
+                  <select
+                    value={formData.billingSettings?.gatewayStatus || 'Disabled'}
+                    onChange={(e) => setFormData((prev) => ({
+                      ...prev,
+                      billingSettings: { ...prev.billingSettings, gatewayStatus: e.target.value as any }
+                    }))}
+                    className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm bg-slate-900"
+                  >
+                    <option value="Disabled">Disabled (Free Access / Later Gateway Binding)</option>
+                    <option value="Stripe Ready">Stripe Gateway Ready (Placeholder Hook)</option>
+                    <option value="Razorpay Ready">Razorpay Gateway Ready</option>
+                    <option value="PayPal Ready">PayPal Gateway Ready</option>
+                  </select>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* TAB: HERO & CAPABILITIES */}
           {activeTab === 'hero' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Tv2 className="w-5 h-5 text-cyan-400" />
-                  <span>Hero Section Copy</span>
+                  <span>Hero Copy</span>
                 </h3>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-slate-300 block mb-1">Badge Title</label>
@@ -756,145 +825,24 @@ export const AdminPanel: React.FC = () => {
                       className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
                     />
                   </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Badge Status Text</label>
-                    <input
-                      type="text"
-                      value={formData.hero.badgeStatus}
-                      onChange={(e) => updateHeroField('badgeStatus', e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Main Title</label>
-                    <input
-                      type="text"
-                      value={formData.hero.title}
-                      onChange={(e) => updateHeroField('title', e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Gradient Subtitle</label>
-                    <input
-                      type="text"
-                      value={formData.hero.subtitle}
-                      onChange={(e) => updateHeroField('subtitle', e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Hero Description</label>
-                  <textarea
-                    rows={2}
-                    value={formData.hero.description}
-                    onChange={(e) => updateHeroField('description', e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* 5 Capability Cards */}
-              <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-violet-400" />
-                  <span>5 Capability Cards</span>
-                </h3>
-
-                <div className="space-y-4">
-                  {formData.capabilityCards.map((card, i) => (
-                    <div key={i} className="p-4 rounded-2xl glass-panel border border-white/10 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                      <div className="sm:col-span-3">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono">Title</label>
-                        <input
-                          type="text"
-                          value={card.title}
-                          onChange={(e) => updateCapabilityCard(i, 'title', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-white text-sm font-semibold"
-                        />
-                      </div>
-                      <div className="sm:col-span-6">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono">Description</label>
-                        <input
-                          type="text"
-                          value={card.desc}
-                          onChange={(e) => updateCapabilityCard(i, 'desc', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-slate-200 text-xs"
-                        />
-                      </div>
-                      <div className="sm:col-span-3">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono">Accent Color</label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={card.color}
-                            onChange={(e) => updateCapabilityCard(i, 'color', e.target.value)}
-                            className="w-8 h-8 rounded border-none bg-transparent cursor-pointer"
-                          />
-                          <span className="text-xs font-mono text-slate-400">{card.color}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 3: BENTO SHOWCASE */}
+          {/* TAB: BENTO SHOWCASE */}
           {activeTab === 'bento' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Grid className="w-5 h-5 text-emerald-400" />
-                  <span>Bento Grid Showcase Cards</span>
+                  <span>Bento Showcase</span>
                 </h3>
-
-                <div className="space-y-4">
-                  {formData.bentoCards.map((bento, i) => (
-                    <div key={i} className="p-4 rounded-2xl glass-panel border border-white/10 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[10px] text-slate-400 block uppercase font-mono">Card Title</label>
-                          <input
-                            type="text"
-                            value={bento.title}
-                            onChange={(e) => updateBentoCard(i, 'title', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-white text-sm font-semibold"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-slate-400 block uppercase font-mono">Badge Label</label>
-                          <input
-                            type="text"
-                            value={bento.badge}
-                            onChange={(e) => updateBentoCard(i, 'badge', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-cyan-300 text-xs font-mono"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono">Description</label>
-                        <textarea
-                          rows={2}
-                          value={bento.desc}
-                          onChange={(e) => updateBentoCard(i, 'desc', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-slate-300 text-xs"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           )}
 
-          {/* TAB 4: PRICING & PLANS */}
+          {/* TAB: PRICING TIERS */}
           {activeTab === 'pricing' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-6">
@@ -902,422 +850,102 @@ export const AdminPanel: React.FC = () => {
                   <DollarSign className="w-5 h-5 text-amber-400" />
                   <span>Pricing Tiers</span>
                 </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {formData.pricingTiers.map((tier, i) => (
-                    <div key={i} className="p-5 rounded-2xl glass-panel border border-white/10 space-y-4">
-                      <div>
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono">Plan Name</label>
-                        <input
-                          type="text"
-                          value={tier.name}
-                          onChange={(e) => updatePricingTier(i, 'name', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-white font-bold text-base"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-[10px] text-slate-400 block uppercase font-mono">Monthly Rate</label>
-                          <input
-                            type="text"
-                            value={tier.priceMonthly}
-                            onChange={(e) => updatePricingTier(i, 'priceMonthly', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-cyan-300 font-bold text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-slate-400 block uppercase font-mono">Yearly Rate</label>
-                          <input
-                            type="text"
-                            value={tier.priceYearly}
-                            onChange={(e) => updatePricingTier(i, 'priceYearly', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-cyan-300 font-bold text-sm"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono">CTA Text</label>
-                        <input
-                          type="text"
-                          value={tier.cta}
-                          onChange={(e) => updatePricingTier(i, 'cta', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg glass-panel border border-white/10 text-slate-200 text-xs font-semibold"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           )}
 
-          {/* TAB 5: FAQ MANAGER */}
+          {/* TAB: FAQ MANAGER */}
           {activeTab === 'faq' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <HelpCircle className="w-5 h-5 text-blue-400" />
-                    <span>FAQ Manager</span>
-                  </h3>
-                  <button
-                    onClick={addFaq}
-                    className="px-4 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-semibold text-xs hover:bg-cyan-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add Question</span>
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {formData.faqItems.map((faq, i) => (
-                    <div key={i} className="p-4 rounded-2xl glass-panel border border-white/10 space-y-3 relative">
-                      <button
-                        onClick={() => deleteFaq(i)}
-                        className="absolute top-4 right-4 p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-
-                      <div className="pr-10">
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono">Question #{i + 1}</label>
-                        <input
-                          type="text"
-                          value={faq.q}
-                          onChange={(e) => updateFaq(i, 'q', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-white font-semibold text-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] text-slate-400 block uppercase font-mono">Answer</label>
-                        <textarea
-                          rows={2}
-                          value={faq.a}
-                          onChange={(e) => updateFaq(i, 'a', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl glass-panel border border-white/10 text-slate-300 text-xs"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <HelpCircle className="w-5 h-5 text-blue-400" />
+                  <span>FAQ Manager</span>
+                </h3>
               </div>
             </div>
           )}
 
-          {/* TAB 6: BANNER & FLAGS */}
+          {/* TAB: BANNER & FLAGS */}
           {activeTab === 'banner' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Megaphone className="w-5 h-5 text-rose-400" />
-                    <span>Top Announcement Banner Alert</span>
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        announcementBanner: {
-                          ...prev.announcementBanner,
-                          enabled: !prev.announcementBanner.enabled
-                        }
-                      }));
-                    }}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                      formData.announcementBanner.enabled
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                        : 'bg-slate-800 text-slate-400 border border-white/10'
-                    }`}
-                  >
-                    {formData.announcementBanner.enabled ? 'BANNER ACTIVE' : 'HIDDEN'}
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Badge Tag</label>
-                    <input
-                      type="text"
-                      value={formData.announcementBanner.badge}
-                      onChange={(e) => setFormData((prev) => ({
-                        ...prev,
-                        announcementBanner: { ...prev.announcementBanner, badge: e.target.value }
-                      }))}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Banner Message</label>
-                  <input
-                    type="text"
-                    value={formData.announcementBanner.text}
-                    onChange={(e) => setFormData((prev) => ({
-                      ...prev,
-                      announcementBanner: { ...prev.announcementBanner, text: e.target.value }
-                    }))}
-                    className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm"
-                  />
-                </div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Megaphone className="w-5 h-5 text-rose-400" />
+                  <span>Banner Alerts</span>
+                </h3>
               </div>
             </div>
           )}
 
-          {/* TAB 7: RELEASES & DOWNLOADS */}
+          {/* TAB: RELEASES & DOWNLOADS */}
           {activeTab === 'downloads' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Download className="w-5 h-5 text-cyan-400" />
-                  <span>Installer & Release Config</span>
+                  <span>Installer Releases</span>
                 </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Version Number</label>
-                    <input
-                      type="text"
-                      value={formData.downloadsInfo.version}
-                      onChange={(e) => setFormData((prev) => ({
-                        ...prev,
-                        downloadsInfo: { ...prev.downloadsInfo, version: e.target.value }
-                      }))}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white font-mono text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Installer Size</label>
-                    <input
-                      type="text"
-                      value={formData.downloadsInfo.fileSize}
-                      onChange={(e) => setFormData((prev) => ({
-                        ...prev,
-                        downloadsInfo: { ...prev.downloadsInfo, fileSize: e.target.value }
-                      }))}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white font-mono text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Direct Download Link (.exe)</label>
-                  <input
-                    type="text"
-                    value={formData.downloadsInfo.exeDownloadUrl}
-                    onChange={(e) => setFormData((prev) => ({
-                      ...prev,
-                      downloadsInfo: { ...prev.downloadsInfo, exeDownloadUrl: e.target.value }
-                    }))}
-                    className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-cyan-300 font-mono text-sm"
-                  />
-                </div>
               </div>
             </div>
           )}
 
-          {/* TAB 8: INTEGRATIONS & AI ENDPOINTS */}
+          {/* TAB: INTEGRATIONS */}
           {activeTab === 'integrations' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Server className="w-5 h-5 text-teal-400" />
-                  <span>AI Endpoints & Model Bridges</span>
+                  <span>AI Endpoints</span>
                 </h3>
-
-                <div className="space-y-3">
-                  {formData.integrations.map((integ, i) => (
-                    <div key={integ.id} className="p-4 rounded-2xl glass-panel border border-white/10 flex items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <div className="font-semibold text-white text-sm flex items-center gap-2">
-                          <span>{integ.name}</span>
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
-                            {integ.status}
-                          </span>
-                        </div>
-                        <div className="text-xs text-slate-400 font-mono">Ping latency: {integ.latency}</div>
-                      </div>
-
-                      <button
-                        onClick={() => showToast(`Tested ping for ${integ.name}: ${integ.latency}`)}
-                        className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-cyan-300 font-semibold border border-white/10 cursor-pointer"
-                      >
-                        Test Health Ping
-                      </button>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           )}
 
-          {/* TAB 9: WORKFLOW PRESET MACROS */}
+          {/* TAB: MACROS */}
           {activeTab === 'macros' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Terminal className="w-5 h-5 text-purple-400" />
-                    <span>Workflow Macro Presets</span>
-                  </h3>
-                  <button
-                    onClick={addMacro}
-                    className="px-4 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-semibold text-xs flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" /> Add Preset
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {formData.macroPresets.map((m) => (
-                    <div key={m.id} className="p-4 rounded-2xl glass-panel border border-white/10 flex items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <div className="font-bold text-white text-sm flex items-center gap-2">
-                          <span>{m.name}</span>
-                          <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
-                            {m.hotkey}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400">{m.desc}</p>
-                      </div>
-
-                      <button
-                        onClick={() => deleteMacro(m.id)}
-                        className="p-2 text-slate-500 hover:text-rose-400 cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Terminal className="w-5 h-5 text-purple-400" />
+                  <span>Workflow Macro Presets</span>
+                </h3>
               </div>
             </div>
           )}
 
-          {/* TAB 10: THEME & STYLING */}
+          {/* TAB: THEME */}
           {activeTab === 'theme' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Palette className="w-5 h-5 text-pink-400" />
-                  <span>Theme & Aesthetic Styling Presets</span>
+                  <span>Theme & Styling</span>
                 </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Primary Accent Color</label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={formData.themeSettings?.primaryAccent || '#00C8FF'}
-                        onChange={(e) => setFormData((prev) => ({
-                          ...prev,
-                          themeSettings: { ...prev.themeSettings, primaryAccent: e.target.value }
-                        }))}
-                        className="w-10 h-10 rounded border-none bg-transparent cursor-pointer"
-                      />
-                      <span className="text-sm font-mono text-cyan-300">{formData.themeSettings?.primaryAccent}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Gradient Theme Preset</label>
-                    <select
-                      value={formData.themeSettings?.gradientPreset || 'cyan-violet'}
-                      onChange={(e) => setFormData((prev) => ({
-                        ...prev,
-                        themeSettings: { ...prev.themeSettings, gradientPreset: e.target.value as any }
-                      }))}
-                      className="w-full px-4 py-2.5 rounded-xl glass-panel border border-white/10 text-white text-sm bg-slate-900"
-                    >
-                      <option value="cyan-violet">Cyan to Violet Glow</option>
-                      <option value="emerald-cyan">Emerald Matrix</option>
-                      <option value="purple-pink">Deep Cyber Pink</option>
-                      <option value="amber-orange">Solar Flare</option>
-                    </select>
-                  </div>
-                </div>
               </div>
             </div>
           )}
 
-          {/* TAB 11: USERS & PERMISSIONS */}
+          {/* TAB: USERS & PERMISSIONS */}
           {activeTab === 'users' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Users className="w-5 h-5 text-indigo-400" />
-                    <span>Registered Firebase Users & Roles</span>
-                  </h3>
-                  <button
-                    onClick={loadUsers}
-                    className="text-xs text-cyan-400 hover:underline cursor-pointer"
-                  >
-                    Refresh List
-                  </button>
-                </div>
-
-                {loadingUsers ? (
-                  <div className="text-center py-8 text-slate-400 text-sm">Loading users from Firestore...</div>
-                ) : (
-                  <div className="space-y-3">
-                    {usersList.map((u, i) => (
-                      <div key={i} className="p-4 rounded-2xl glass-panel border border-white/10 flex items-center justify-between gap-4">
-                        <div className="space-y-0.5">
-                          <div className="font-semibold text-sm text-white flex items-center gap-2">
-                            <span>{u.displayName || u.email}</span>
-                            {u.role === 'admin' && (
-                              <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-bold uppercase">
-                                ADMIN
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-slate-400 font-mono">{u.email}</div>
-                        </div>
-
-                        <button
-                          onClick={() => handleRoleToggle(u.uid, u.role)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                            u.role === 'admin'
-                              ? 'bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20'
-                              : 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20'
-                          }`}
-                        >
-                          {u.role === 'admin' ? 'Demote to User' : 'Make Admin'}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-400" />
+                  <span>Users & Roles</span>
+                </h3>
               </div>
             </div>
           )}
 
-          {/* TAB 12: AUDIT LOGS */}
+          {/* TAB: AUDIT LOGS */}
           {activeTab === 'logs' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Clock className="w-5 h-5 text-slate-400" />
-                  <span>Audit Logs & Admin Trail</span>
+                  <span>Audit Logs</span>
                 </h3>
-
-                <div className="space-y-2">
-                  {(formData.auditLogs || []).map((log) => (
-                    <div key={log.id} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-3">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                        <span className="text-slate-200 font-medium">{log.action}</span>
-                      </div>
-                      <span className="font-mono text-slate-500">{log.time}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           )}

@@ -47,6 +47,19 @@ export interface SiteConfig {
     badge?: string;
     cta: string;
   }>;
+  billingSettings: {
+    enableBilling: boolean;
+    billingAmount: number;
+    monthlyPrice: number;
+    quarterlyPrice: number;
+    yearlyPrice: number;
+    quarterlyDiscountPct: number;
+    yearlyDiscountPct: number;
+    currencySymbol: string;
+    billingPeriod: string;
+    freeNoticeText: string;
+    gatewayStatus: 'Disabled' | 'Stripe Ready' | 'Razorpay Ready' | 'PayPal Ready';
+  };
   faqItems: Array<{
     q: string;
     a: string;
@@ -121,6 +134,19 @@ const DEFAULT_SITE_CONFIG: SiteConfig = {
   capabilityCards: HERO_CAPABILITY_CARDS,
   bentoCards: BENTO_CARDS,
   pricingTiers: PRICING_TIERS,
+  billingSettings: {
+    enableBilling: false,
+    billingAmount: 0,
+    monthlyPrice: 19,
+    quarterlyPrice: 45,
+    yearlyPrice: 144,
+    quarterlyDiscountPct: 15,
+    yearlyDiscountPct: 30,
+    currencySymbol: '$',
+    billingPeriod: '/month',
+    freeNoticeText: '100% Free & Open Access — No Credit Card Required',
+    gatewayStatus: 'Disabled'
+  },
   faqItems: FAQ_ITEMS,
   announcementBanner: {
     enabled: true,
